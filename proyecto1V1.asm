@@ -9,6 +9,56 @@ li $v0 10
 syscall
 .end_macro
 
+.macro convertir_numero(%cadena)
+li $t9 0
+li $t2 0
+loop:
+	
+	lb $t1 %cadena($t9)
+	
+	beqz $t1 fin_loop
+	beq $t1 0x0A llenar_ceros
+	
+	bgt $t9 50 inicio
+	blt $t1 0x30 inicio
+	bgt $t1 0x39 inicio
+ 
+	addi $t2 $t2 1
+	addi $t9 $t9 1
+	
+	b loop
+	
+	llenar_ceros: 
+		 
+		 beq $t9 50 llenar_ceros_part2
+		 li $t1 0x30 
+		 sb $t1 %cadena($t9)
+		  
+		 addi $t9 $t9 1 
+		 b llenar_ceros
+		 
+	llenar_ceros_part2:
+	
+	li $t9 49
+	subi $t2 $t2 1
+		
+	loop_ceros:
+		
+		bltz $t2 fin_loop
+		
+		lb $t1 %cadena($t2)
+		sb $s0 %cadena($t2)
+		sb $t1 %cadena($t9)
+			
+		subi $t9 $t9 1
+		subi $t2 $t2 1
+		
+		b loop_ceros
+		
+fin_loop:
+.end_macro
+
+
 .data
 mensaje: .asciiz "Ingrese operacion a realizar \n1. Sumar\n2. Restar\n3. Multiplicar\n4. Salir\n"
 salto: .asciiz "\n"
@@ -56,85 +106,20 @@ la $a0 espacionumero2
 li $a1 401
 syscall
 
+li $s0 0x30
+
 beq $t0 1 sumar
 beq $t0 2 restar
 beq $t0 3 multiplicar
 
-
-
-
 sumar:
 
-li $t9 0
-loop1:
-	
-	lb $t1 espacionumero1($t9)
-	
-	beqz $t1 fin_loop1
-	beq $t1 0x0A llenar_ceros #
-	
-	
-	
-	beq $t9 50 inicio
-	blt $t1 0x30 inicio
-	bgt $t1 0x39 inicio
- 
-	addi $t4 $t4 1
-	addi $t9 $t9 1
-	
-	b loop1
-	
-	llenar_ceros: 
-		 
-		 beq $t9 50 fin_loop1
-		 li $t1 0x30 
-		 sb $t1 espacionumero1($t9)
-		  
-		 addi $t9 $t9 1 
-		 b llenar_ceros
-		
-fin_loop1:
+convertir_numero(espacionumero1)
+convertir_numero(espacionumero2)
 
-li $t9 0
-print_string(mensaje)
-
-loop2:
-	
-	lb $t2 espacionumero2($t9)
-	
-	beqz $t2 fin_loop2
-	beq $t2 0x0A llenar_ceros2
-	
-	beq $t9 50 inicio
-	blt $t2 0x30 inicio
-	bgt $t2 0x39 inicio
- 
-	addi $t5 $t5 1
-	addi $t9 $t9 1
-	
-	b loop2
-	
-	llenar_ceros2: 
-		 
-		 beq $t9 50 fin_loop2
-		 li $t2 0x30 
-		 sb $t2 espacionumero2($t9)
-		  
-		 addi $t9 $t9 1 
-		 b llenar_ceros2
-	
-fin_loop2:
-
-print_string(espacionumero2)
 print_string(espacionumero1)
-
-li $t9 0
-
-loop_ceros:
-	
-
-
-	
+print_string(salto)
+print_string(espacionumero2)	
 
 salir
 
