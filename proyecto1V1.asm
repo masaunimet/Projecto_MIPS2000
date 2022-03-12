@@ -10,36 +10,37 @@ syscall
 .end_macro
 
 .macro llenar_ceros(%cadena)
-li $t1 0x30
-li $t2 0
+li $t9 0x30
+li $t8 0
 loop_llenar:
 	
-	bgt $t2 48 fin_loop_llenar
-	sb $t1 %cadena($t2)
 	
-	addi $t2 $t2 1
+	bgt $t8 49 fin_loop_llenar
+	sb $t9 %cadena($t8)
+	
+	addi $t8 $t8 1
 	b loop_llenar
 	
 fin_loop_llenar:
-addi $t2 $t2 1
-sb $zero %cadena($t2)
+addi $t8 $t8 1
+sb $zero %cadena($t8)
 .end_macro
 
 .macro convertir_numero(%cadena)
 li $t9 0
-li $t2 0
+li $t8 0
 loop:
 	
-	lb $t1 %cadena($t9)
+	lb $t7 %cadena($t9)
 	
-	beqz $t1 fin_loop
-	beq $t1 0x0A llenar_ceros
+	beqz $t7 fin_loop
+	beq $t7 0x0A llenar_ceros
 	
 	bgt $t9 50 inicio
-	blt $t1 0x30 inicio
-	bgt $t1 0x39 inicio
+	blt $t7 0x30 inicio
+	bgt $t7 0x39 inicio
  
-	addi $t2 $t2 1
+	addi $t8 $t8 1
 	addi $t9 $t9 1
 	
 	b loop
@@ -47,8 +48,8 @@ loop:
 	llenar_ceros: 
 		 
 		 beq $t9 50 llenar_ceros_part2
-		 li $t1 0x30 
-		 sb $t1 %cadena($t9)
+		 li $t7 0x30 
+		 sb $t7 %cadena($t9)
 		  
 		 addi $t9 $t9 1 
 		 b llenar_ceros
@@ -56,18 +57,18 @@ loop:
 	llenar_ceros_part2:
 	
 	li $t9 49
-	subi $t2 $t2 1
+	subi $t8 $t8 1
 		
 	loop_ceros:
 		
-		bltz $t2 fin_loop
+		bltz $t8 fin_loop
 		
-		lb $t1 %cadena($t2)
-		sb $s0 %cadena($t2)
-		sb $t1 %cadena($t9)
+		lb $t7 %cadena($t8)
+		sb $s0 %cadena($t8)
+		sb $t7 %cadena($t9)
 			
 		subi $t9 $t9 1
-		subi $t2 $t2 1
+		subi $t8 $t8 1
 		
 		b loop_ceros
 		
@@ -82,17 +83,18 @@ mensajeerror : .asciiz "ingrese una opcion del 1 al 4"
 primernumero: .asciiz "Ingrese el primer numero: "
 segundonumero: .asciiz "Ingrese el segundo numero: "
 resultado: .asciiz "El resultado es"
-espacionumero1: .space 401
-espacionumero2: .space 401
-espacionumero3: .space 409
+espacionumero1: .space 51
+espacionumero2: .space 51
+espacionumero3: .space 52
 
 .text
 
-#.eqv $t1 digito_cadena_1
-#.eqv $t2 digito_cadena_2
-#.eqv $t3 digito_cadena_3
-#.eqv $t4 limite_cadena_1
-#.eqv $t5 limite_cadena_2
+.eqv opcion $t0
+.eqv digito1 $t1
+.eqv digito23 $t2
+.eqv boleano $t3 
+.eqv indice $t4 
+.eqv indice3 $t4 
 
 li $s0 0x30
 li $s1 0x39
@@ -109,38 +111,67 @@ li $v0 5
 syscall
 move $t0 $v0
 
-blt $t0 1 inicio
-bgt $t0 4 inicio
-beq $t0 4 salir
+blt opcion 1 inicio
+bgt opcion 4 inicio
+beq opcion 4 salir
 
 print_string(salto)
 print_string(primernumero)
 
 li $v0 8
 la $a0 espacionumero1
-li $a1 401
+li $a1 51
 syscall
 
 print_string(salto)
 print_string(segundonumero)
 li $v0 8
 la $a0 espacionumero2
-li $a1 401
+li $a1 51
 syscall
-
+print_string(salto)
 convertir_numero(espacionumero1)
 convertir_numero(espacionumero2)
 
-beq $t0 1 sumar
-beq $t0 2 restar
-beq $t0 3 multiplicar
+li boleano 0
+li indice 49
+
+beq opcion 1 sumar
+beq opcion 2 restar
+beq opcion 3 multiplicar
 
 sumar:
-print_string(salto)
+	
+	blt indice 0 fin_sumar
+	lb digito1 espacionumero1(indice)
+	lb digito23 espacionumero2(indice)
+	
+	sub digito1 digito1 $s0
+	sub digito23 digito23 $s0
+	
+	add digito23 digito23 digito1
+	beqz boleano continue
+	li boleano 0
+	addi digito23 digito23 1
+	continue:
+	blt digito23 10 continue2
+	
+	li boleano 1
+	subi digito23 digito23 10
+	
+	continue2:
+	add digito23 digito23 $s0
+	sb digito23 espacionumero3(indice)
+	subi indice indice 1
+	b sumar
+	
+fin_sumar:
 print_string(espacionumero1)
 print_string(salto)
 print_string(espacionumero2)
-salir
+print_string(salto)
+print_string(espacionumero3)
+b salir
 
 restar:
 
