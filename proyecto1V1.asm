@@ -9,6 +9,22 @@ li $v0 10
 syscall
 .end_macro
 
+.macro llenar_ceros(%cadena)
+li $t1 0x30
+li $t2 0
+loop_llenar:
+	
+	bgt $t2 48 fin_loop_llenar
+	sb $t1 %cadena($t2)
+	
+	addi $t2 $t2 1
+	b loop_llenar
+	
+fin_loop_llenar:
+addi $t2 $t2 1
+sb $zero %cadena($t2)
+.end_macro
+
 .macro convertir_numero(%cadena)
 li $t9 0
 li $t2 0
@@ -68,7 +84,7 @@ segundonumero: .asciiz "Ingrese el segundo numero: "
 resultado: .asciiz "El resultado es"
 espacionumero1: .space 401
 espacionumero2: .space 401
-espacionumero3: .space 401
+espacionumero3: .space 409
 
 .text
 
@@ -78,7 +94,13 @@ espacionumero3: .space 401
 #.eqv $t4 limite_cadena_1
 #.eqv $t5 limite_cadena_2
 
+li $s0 0x30
+li $s1 0x39
+
 inicio:
+llenar_ceros(espacionumero1)
+llenar_ceros(espacionumero2)
+llenar_ceros(espacionumero3)
 print_string(mensajeerror)
 print_string(salto)
 print_string(mensaje)
@@ -106,21 +128,18 @@ la $a0 espacionumero2
 li $a1 401
 syscall
 
-li $s0 0x30
+convertir_numero(espacionumero1)
+convertir_numero(espacionumero2)
 
 beq $t0 1 sumar
 beq $t0 2 restar
 beq $t0 3 multiplicar
 
 sumar:
-
-convertir_numero(espacionumero1)
-convertir_numero(espacionumero2)
-
+print_string(salto)
 print_string(espacionumero1)
 print_string(salto)
-print_string(espacionumero2)	
-
+print_string(espacionumero2)
 salir
 
 restar:
