@@ -13,8 +13,6 @@ syscall
 li $t9 0x30
 li $t8 0
 loop_llenar:
-	
-	
 	bgt $t8 49 fin_loop_llenar
 	sb $t9 %cadena($t8)
 	
@@ -22,6 +20,21 @@ loop_llenar:
 	b loop_llenar
 	
 fin_loop_llenar:
+addi $t8 $t8 1
+sb $zero %cadena($t8)
+.end_macro
+
+.macro llenar_ceros2(%cadena)
+li $t9 0x30
+li $t8 0
+loop_llenar:
+	bgt $t8 50 fin_loop_llenar2
+	sb $t9 %cadena($t8)
+	
+	addi $t8 $t8 1
+	b loop_llenar
+	
+fin_loop_llenar2:
 addi $t8 $t8 1
 sb $zero %cadena($t8)
 .end_macro
@@ -94,7 +107,7 @@ espacionumero3: .space 52
 .eqv digito23 $t2
 .eqv boleano $t3 
 .eqv indice $t4 
-.eqv indice3 $t4 
+.eqv indice3 $t5
 
 li $s0 0x30
 li $s1 0x39
@@ -102,7 +115,7 @@ li $s1 0x39
 inicio:
 llenar_ceros(espacionumero1)
 llenar_ceros(espacionumero2)
-llenar_ceros(espacionumero3)
+llenar_ceros2(espacionumero3)
 print_string(mensajeerror)
 print_string(salto)
 print_string(mensaje)
@@ -135,6 +148,7 @@ convertir_numero(espacionumero2)
 
 li boleano 0
 li indice 49
+li indice3 50
 
 beq opcion 1 sumar
 beq opcion 2 restar
@@ -161,11 +175,16 @@ sumar:
 	
 	continue2:
 	add digito23 digito23 $s0
-	sb digito23 espacionumero3(indice)
+	sb digito23 espacionumero3(indice3)
 	subi indice indice 1
+	subi indice3 indice3 1
 	b sumar
 	
 fin_sumar:
+beqz boleano no_condicional
+li digito23 0x31
+sb digito23 espacionumero3($zero)
+no_condicional:
 print_string(espacionumero1)
 print_string(salto)
 print_string(espacionumero2)
