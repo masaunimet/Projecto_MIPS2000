@@ -353,6 +353,7 @@ loop_mul:
 	add digito23 digito23 $s0
 	sb digito23 espacionumero3(indice2)
 	subi indice2 indice2 52
+	add indice2 indice2 indice3
 	b loop_mul
 	
 fin_mul:
