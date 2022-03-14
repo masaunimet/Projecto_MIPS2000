@@ -26,7 +26,7 @@ sb $zero %cadena(indice)
 .macro llenar_ceros2(%cadena)
 li indice 0
 loop_llenar:
-	bgt indice 50 fin_loop_llenar2
+	bgt indice 100 fin_loop_llenar2
 	sb $s0 %cadena(indice)
 	
 	addi indice indice 1
@@ -129,10 +129,10 @@ salto: .asciiz "\n"
 mensajeerror : .asciiz "ingrese una opcion del 1 al 4"
 primernumero: .asciiz "Ingrese el primer numero: "
 segundonumero: .asciiz "Ingrese el segundo numero:"
-resultado: .asciiz "El resultado es: "
+resultado: .asciiz "El resultado es:\n"
 espacionumero1: .space 51
 espacionumero2: .space 51
-espacionumero3: .space 52
+espacionumero3: .space 101
 
 .text
 
@@ -142,11 +142,12 @@ espacionumero3: .space 52
 .eqv boleano $t3 
 .eqv indice $t4 
 .eqv indice2 $t5
-.eqv tamano1 $t6 
-.eqv tamano2 $t7
+.eqv indice3 $t6
+.eqv tamano1 $t7
+.eqv tamano2 $t8
 
 li $s0 0x30
-li $s1 0x39
+li $s1 10
 
 inicio:
 llenar_ceros(espacionumero1)
@@ -178,14 +179,14 @@ li $v0 8
 la $a0 espacionumero2
 li $a1 51
 syscall
-print_string(salto)
 convertir_numero(espacionumero1)
 move tamano1 tamano2
 convertir_numero(espacionumero2)
 
 li boleano 0
 li indice 49
-li indice2 50
+li indice2 100
+li indice3 -1
 
 beq opcion 1 sumar
 beq opcion 2 restar
@@ -205,10 +206,10 @@ sumar:
 	li boleano 0
 	addi digito23 digito23 1
 	continue:
-	blt digito23 10 continue2
+	blt digito23 $s1 continue2
 	
 	li boleano 1
-	subi digito23 digito23 10
+	sub digito23 digito23 $s1
 	
 	continue2:
 	add digito23 digito23 $s0
@@ -220,7 +221,7 @@ sumar:
 fin_sumar:
 beqz boleano no_condicional
 li digito23 0x31
-sb digito23 espacionumero3($zero)
+sb digito23 espacionumero3(indice2)
 no_condicional:
 print_string(salto)
 print_string(resultado)
@@ -233,7 +234,7 @@ restar:
 comparar_tamanos
 beqz boleano segundo_mayor
 li indice 49
-li indice2 50
+li indice2 100
 
 	primer_mayor:
 	li boleano 0
@@ -256,7 +257,7 @@ li indice2 50
 		
 		bgez digito23 normal1
 		li boleano 1 
-		addi digito23 digito23 10
+		add digito23 digito23 $s1
 		
 		normal1:
 		add digito23 digito23 $s0
@@ -285,7 +286,7 @@ li indice2 50
 		
 		bgt digito23 -1 normal2
 		li boleano 1 
-		addi digito23 digito23 10
+		add digito23 digito23 $s1
 		
 		normal2:
 		add digito23 digito23 $s0
@@ -309,6 +310,58 @@ print_string(salto)
 b inicio
 
 multiplicar:
+li indice2 49
+bltz indice fin_mul
+lb digito1 espacionumero1(indice)
+sub digito1 digito1 $s0
+subi indice indice 1
+addi indice3 indice3 1
+
+loop_mul:
+	
+	bltz indice2 multiplicar
+	
+	lb digito23 espacionumero2(indice2)
+	sub digito23 digito23 $s0
+	
+	mul digito23 digito23 digito1
+	beqz boleano no_condicional_mul
+	add digito23 digito23 boleano
+	li boleano 0
+	
+	no_condicional_mul:
+	blt digito23 $s1 normal_mul
+	div digito23 $s1
+	mfhi digito23
+	mflo boleano
+	
+	normal_mul:
+	addi indice2 indice2 51
+	sub indice2 indice2 indice3
+	lb opcion espacionumero3(indice2)
+	sub opcion opcion $s0
+	add digito23 digito23 opcion
+	blt digito23 $s1 continue_mul
+	sub digito23 digito23 $s1
+	subi indice2 indice2 1
+	lb opcion espacionumero3(indice2)
+	addi opcion opcion 1
+	sb opcion espacionumero3(indice2)
+	addi indice2 indice2 1
+	
+	continue_mul:
+	add digito23 digito23 $s0
+	sb digito23 espacionumero3(indice2)
+	subi indice2 indice2 52
+	b loop_mul
+	
+fin_mul:
+print_string(salto)
+print_string(resultado)
+print_string(espacionumero3)
+print_string(salto)
+print_string(salto)
+b inicio
 
 salir:
 salir
