@@ -13,6 +13,8 @@ syscall
 li indice 0
 loop_llenar:
 	bgt indice 49 fin_loop_llenar
+
+		
 	sb $s0 %cadena(indice)
 	
 	addi indice indice 1
@@ -42,9 +44,30 @@ li indice 0
 li indice2 0
 li tamano2 0
 loop:
-	
+
 	lb digito1 %cadena(indice)
 	
+	bnez indice no_condicional_cero
+	beq digito1 0x2D es_menos
+	beq digito1 0x2B es_mas
+	b inicio
+	
+	es_menos:
+		li $a3 1
+		b fin_guion
+		
+	es_mas:
+		li $a3 0
+		b fin_guion	
+		
+		fin_guion:
+			sb $s0 %cadena($zero)
+			li digito1 0x30
+			b no_condicional_cero 
+		
+	
+			
+	no_condicional_cero:
 	beqz digito1 fin_loop
 	beq digito1 0x0A llenar_ceros
 	
@@ -127,8 +150,8 @@ fin_comparar_tamanos:
 mensaje: .asciiz "Ingrese operacion a realizar \n1. Sumar\n2. Restar\n3. Multiplicar\n4. Salir\n"
 salto: .asciiz "\n"
 mensajeerror : .asciiz "ingrese una opcion del 1 al 4"
-primernumero: .asciiz "Ingrese el primer numero: "
-segundonumero: .asciiz "Ingrese el segundo numero:"
+primernumero: .asciiz "Ingrese el primer numero(primer digito tiene que ser un + o un -):\n"
+segundonumero: .asciiz "Ingrese el segundo numero (primer digito tiene que ser un + o un -):\n"
 resultado: .asciiz "El resultado es:\n"
 espacionumero1: .space 51
 espacionumero2: .space 51
@@ -148,6 +171,7 @@ espacionumero3: .space 101
 
 li $s0 0x30
 li $s1 10
+li $s2 0x01
 
 inicio:
 llenar_ceros(espacionumero1)
@@ -181,15 +205,25 @@ li $a1 51
 syscall
 convertir_numero(espacionumero1)
 move tamano1 tamano2
+move $t9 $a3
 convertir_numero(espacionumero2)
+
 
 li boleano 0
 li indice 49
 li indice2 100
 li indice3 -1
 
-beq opcion 1 sumar
-beq opcion 2 restar
+beq opcion 1 sumar_opcion
+beq opcion 2 restar_opcion
+
+	sumar_opcion:
+	beq $a3 $t9 sumar
+	b restar
+	
+	restar_opcion:
+	beq $a3 $t9 restar
+	b sumar
 beq opcion 3 multiplicar
 
 sumar:
@@ -219,6 +253,18 @@ sumar:
 	b sumar
 	
 fin_sumar:
+beq $t9 0 positivo
+b negativo
+	positivo:
+	li digito1 0x2B
+	sb digito1 espacionumero3($zero)
+	b suma_fin
+	
+	negativo:
+	li digito1 0x2D
+	sb digito1 espacionumero3($zero)
+	
+suma_fin:
 beqz boleano no_condicional
 li digito23 0x31
 sb digito23 espacionumero3(indice2)
@@ -241,7 +287,7 @@ li indice2 100
 	
 	loop_resta:
 		
-		blt indice 0 fin_resta
+		blt indice 0 condicional_resta_signo
 		lb digito1 espacionumero1(indice)
 		lb digito23 espacionumero2(indice)
 		
@@ -296,6 +342,16 @@ li indice2 100
 		subi indice2 indice2 1
 		
 		b segundo_mayor
+		
+condicional_resta_signo:
+beqz $t9 signo_positivo_res
+li digito1 0x2D
+sb digito1 espacionumero3($zero)
+b fin_resta
+signo_positivo_res:
+li digito1 0x2B
+sb digito1 espacionumero3($zero)
+b fin_resta
 
 fin_resta_especial:
 li digito23 0x2D
@@ -357,6 +413,18 @@ loop_mul:
 	b loop_mul
 	
 fin_mul:
+
+	beq $t9 $a3 iguales_mul
+	no_iguales_mul:
+		li digito23 0x2D 
+		sb digito23 espacionumero3($zero)
+		b finalizado_mul
+	
+	iguales_mul:
+		li digito23 0x2B 
+		sb digito23 espacionumero3($zero)
+
+finalizado_mul:
 print_string(salto)
 print_string(resultado)
 print_string(espacionumero3)
