@@ -214,6 +214,7 @@ li indice 49
 li indice2 100
 li indice3 -1
 
+beq opcion 3 multiplicar
 beq opcion 1 sumar_opcion
 beq opcion 2 restar_opcion
 
@@ -224,7 +225,6 @@ beq opcion 2 restar_opcion
 	restar_opcion:
 	beq $a3 $t9 restar
 	b sumar
-beq opcion 3 multiplicar
 
 sumar:
 	
